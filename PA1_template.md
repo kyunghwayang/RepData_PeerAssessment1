@@ -69,7 +69,7 @@ mean <- round(mean(dailySteps$n, na.rm=TRUE), 0.1)
 median <- median(dailySteps$n, na.rm=TRUE)
 ```
 
-** Summary **  
+**Summary**  
 The mean of the total number of steps taken per day: 9354  
 The median of the total number of steps taken per day: 10395
 
@@ -151,7 +151,7 @@ hist(dailySteps2$n, breaks = 20, main="Number of Steps taken daily", xlab="")
 mean2 <- as.integer(mean(dailySteps2$n))
 median2 <- median(dailySteps2$n) 
 ```
-** Report **
+**Report**
 
 1. The total number of rows with NA: 2304
 
