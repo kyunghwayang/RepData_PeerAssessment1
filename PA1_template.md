@@ -6,13 +6,11 @@ output:
     keep_md: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-#knitr::opts_chunk$set(cache = TRUE)
-```
+
 
 ## Loading and preprocessing the data
-```{r load}
+
+```r
 file <- read.csv("activity.csv")
 df <- data.frame(file)
 #head(df)
@@ -28,27 +26,58 @@ df$date <- as.Date(df$date, "%Y-%m-%d")
 
 ## What is mean total number of steps taken per day?
 
-```{r mean}
 
+```r
 library(dplyr)
+```
 
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 dailySteps <- df %>%
         group_by(date) %>%
         summarise(n=sum(steps, na.rm=TRUE))
+```
 
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
 hist(dailySteps$n, breaks = 20, main="Number of Steps taken daily", xlab="") 
+```
+
+![](PA1_template_files/figure-html/mean-1.png)<!-- -->
+
+```r
 mean <- round(mean(dailySteps$n, na.rm=TRUE), 0.1)
 median <- median(dailySteps$n, na.rm=TRUE)
 ```
 
 ** Summary **  
-The mean of the total number of steps taken per day: `r mean`  
-The median of the total number of steps taken per day: `r median`
+The mean of the total number of steps taken per day: 9354  
+The median of the total number of steps taken per day: 10395
 
 
 
 ## What is the average daily activity pattern?
-```{r averageDailyPattern}
+
+```r
 library(ggplot2)
 
 pattern <- data.frame(interval=unique(df$interval))
@@ -63,20 +92,24 @@ g <- ggplot(pattern, aes(x=interval, y=dailyAverage)) +
         labs (x="Interval", y="Average daily steps")
 
 print(g)
+```
 
+![](PA1_template_files/figure-html/averageDailyPattern-1.png)<!-- -->
+
+```r
 max <- pattern$interval[which.max(pattern$dailyAverage)]
-
 ```
 
 
 **Report**
 
-The interval that contains the maximum number of steps is `r max`.
+The interval that contains the maximum number of steps is 835.
 
 
 ## Imputing missing values
 
-```{r}
+
+```r
 ## check each row to identify missing steps.
 identifyStatus <- function(record){
         if(is.na(record[1])) return("Missing")
@@ -102,20 +135,29 @@ for(i in 1:nrow(df2)){
 dailySteps2 <- df2 %>%
         group_by(date) %>%
         summarise(n=sum(steps))
+```
 
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
 hist(dailySteps2$n, breaks = 20, main="Number of Steps taken daily", xlab="") 
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
+
+```r
 mean2 <- as.integer(mean(dailySteps2$n))
 median2 <- median(dailySteps2$n) 
-
-
 ```
 ** Report **
 
-1. The total number of rows with NA: `r numOfMissing`
+1. The total number of rows with NA: 2304
 
 2. After filling in the missing data:  
-The mean of the total number of steps taken per day: `r mean2`  
-The median of the total number of steps taken per day: `r median2`
+The mean of the total number of steps taken per day: 10765  
+The median of the total number of steps taken per day: 10762
 
 3. Both mean and median are greater after imputing missing data than before imputing missing data. 
 
@@ -123,7 +165,8 @@ The median of the total number of steps taken per day: `r median2`
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
+
+```r
 dayFactor <- factor(c("weekday", "weekend"))
 
 setDay <- function(dateObj){
@@ -138,14 +181,20 @@ df2$day <- sapply(df2$date, setDay)
 pattern2 <- df2 %>%
   group_by(interval, day) %>%
   summarise(dailyAverage=mean(steps))
+```
 
+```
+## `summarise()` regrouping output by 'interval' (override with `.groups` argument)
+```
+
+```r
 q <- ggplot(pattern2, aes(x=as.integer(interval), y=dailyAverage)) +
     facet_grid(day~.) +   
     geom_line() +
     labs (x="Interval", y="Average daily steps")
 
 print(q)
-
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
 
