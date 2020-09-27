@@ -1,25 +1,156 @@
 ---
 title: "Reproducible Research: Peer Assessment 1"
+author: K. Yang
 output: 
   html_document:
     keep_md: true
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
 
 ## Loading and preprocessing the data
+```{r load}
+file <- read.csv("activity.csv")
+df <- data.frame(file)
+#head(df)
+#str(df)
+df <- transform(df, date=as.Date(date, "%Y-%m-%d"), interval=factor(interval))
+```
 
 
 
 ## What is mean total number of steps taken per day?
 
+```{r mean}
+
+library(dplyr)
+
+dailySteps <- df %>%
+        group_by(date) %>%
+        summarise(n=sum(steps, na.rm=TRUE))
+
+hist(dailySteps$n, breaks = 20, main="Number of Steps taken daily", xlab="") 
+mean <- mean(dailySteps$n, na.rm=TRUE)
+median <- median(dailySteps$n, na.rm=TRUE)
+```
+
+** Summary **  
+The mean of the total number of steps taken per day: `r mean`  
+The median of the total number of steps taken per day: `r median`
+
 
 
 ## What is the average daily activity pattern?
+```{r averageDailyPattern}
+library(ggplot2)
 
+pattern <- data.frame(interval=df$interval)
+
+pattern$dailyActivityPattern <- with(df, tapply(steps, interval, mean, na.rm=TRUE))
+#str(pattern)
+
+# geom_line() requires x values are integers, not factors. 
+g <- ggplot(pattern, aes(x=as.integer(interval), y=dailyActivityPattern)) +
+        geom_line() +
+        labs (x="Interval", y="Average daily steps")
+
+print(g)
+
+max <- pattern$interval[which.max(pattern$dailyActivityPattern)]
+
+```
+
+
+**Report**
+
+The interval that contains the maximum number of steps is `r max`.
 
 
 ## Imputing missing values
 
+```{r}
+## check each row to identify missing data. 
+identifyStatus <- function(row){
+        for(i in 1:length(row)){
+                if(is.na(row[i])) return("Missing")
+                else next
+        }
+        return("Complete")
+}
+
+status <- apply(df, 1, identifyStatus)
+numOfMissing <- length(which(status=="Missing"))
+
+## Fill in the missing data(steps) by assigning the average steps in that given interval.
+
+df2 <- df  
+for(i in 1:nrow(df2)){
+        if(is.na(df2$steps[i])) {
+                index <- as.integer(df2$interval[i])/2 + 1
+                df2$steps[i] <- pattern$dailyActivityPattern[index]
+        } else {
+                next
+        }
+}
+
+dailySteps2 <- df2 %>%
+        group_by(date) %>%
+        summarise(n=sum(steps))#, na.rm=TRUE))
+
+hist(dailySteps2$n, breaks = 20, main="Number of Steps taken daily", xlab="") 
+mean2 <- mean(dailySteps2$n) #, na.rm=TRUE)
+median2 <- median(dailySteps2$n) #, na.rm=TRUE)
+
+
+```
+** Report **
+
+1. The total number of rows with NA: `r numOfMissing`
+
+2. After filling in the missing data:  
+The mean of the total number of steps taken per day: `r mean`  
+The median of the total number of steps taken per day: `r median`
+
+3. Approximately, the mean calculated after filling in missing data is higher than the original data, which discarded missing data, by 1331. The medians are the same. 
+
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+days <- factor(c("weekday", "weekend"))
+
+setDay <- function(dateObj){
+        day <- weekdays(dateObj)
+        if(day=="Saturday" | day=="Sunday") return(days[2])
+        else return("days[1]")
+}
+   
+df2$day <- sapply(df2$date, setDay)
+
+# create new daily activity patterns data frame.
+
+
+########## START HERE. 
+pattern2 <- data.frame(interval=df2$interval, day=df2$day)
+
+pattern2$dailyActivityPattern <- with(df2, tapply(steps, interval, mean))
+
+
+# geom_line() requires x values are integers, not factors. 
+g <- ggplot(pattern, aes(x=as.integer(interval), y=dailyActivityPattern)) +
+        geom_line() +
+        labs (x="Interval", y="Average daily steps")
+
+print(g)
+
+max <- pattern$interval[which.max(pattern$dailyActivityPattern)]
+
+
+g <- ggplot(df2, aes(x=integer(integer), y=))
+
+```
+
